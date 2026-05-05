@@ -1,5 +1,9 @@
 {
   "name": "omnihub",
+  "bin": 
+  {
+    "omnihub": "./apps/cli/index.ts"
+  },
   "module": "index.ts",
   "type": "module",
   "private": true,

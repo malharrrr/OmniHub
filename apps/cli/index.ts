@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import { Command } from 'commander';
 import { addMemory, searchMemories } from '../mcp-server/ai.js';
 import { CONFIG } from '../config.js';
