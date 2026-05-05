@@ -17,7 +17,7 @@ Instead of searching through scattered notes, you can log your daily decisions, 
 ### 2. Global Installation (Recommended)
 To make the `omnihub` command available everywhere on your computer (so you can log memories from any project folder), install it globally:
 
-\`\`\`bash
+```bash
 # Clone the repository
 git clone https://github.com/YOUR_USERNAME/omnihub.git
 cd omnihub
@@ -27,13 +27,13 @@ bun install
 
 # Link it globally to your system
 bun link
-\`\`\`
+```
 
 ### 3. Setup Environment
 Copy the example environment file and add your Gemini API key:
-\`\`\`bash
+```bash
 cp .env.example .env
-\`\`\`
+```
 *Edit `.env` and paste your key.*
 
 ---
@@ -53,15 +53,15 @@ Use the CLI to quickly log your thoughts or query your database from anywhere.
 
 **1. Log a Memory:**
 Provide the category flag (`-c`) and your note.
-\`\`\`bash
+```bash
 omnihub log -c architecture "Just swapped out Postgres for a pure JSON file to keep this tool portable."
-\`\`\`
+```
 
 **2. Semantic Search:**
 Search for concepts, not exact keywords.
-\`\`\`bash
+```bash
 omnihub search "database decisions"
-\`\`\`
+```
 
 ---
 
@@ -69,10 +69,10 @@ omnihub search "database decisions"
 You can plug this server into any MCP-compatible client 
 
 **Example: Connecting to Claude Code (Terminal)**
-\`\`\`bash
+```bash
 Run this from inside your cloned omnihub directory:
 claude mcp add omnihub --transport stdio "bun run $(pwd)/apps/mcp-server/index.ts"
-\`\`\`
+```
 
 Once connected, simply ask your AI: *"What was the last architectural decision I made regarding databases?"* The AI will automatically trigger the search tool, scan your JSON file, and give you an answer based entirely on your personal logs.
 
