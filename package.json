@@ -1,23 +1,26 @@
 {
-  "name": "omnihub",
-  "bin": 
-  {
+  "name": "omnihub-cli", 
+  "version": "1.0.0",
+  "description": "A zero-infrastructure MCP server and CLI for your AI second brain",
+  "bin": {
     "omnihub": "./apps/cli/index.ts"
   },
-  "module": "index.ts",
-  "type": "module",
-  "private": true,
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/node": "^25.6.0"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+  "files": [
+    "apps"
+  ],
+  "scripts": {
+    "start": "bun run ./apps/cli/index.ts"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "commander": "^14.0.3",
+    "@google/generative-ai": "^0.21.0",
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "commander": "^12.1.0",
     "cosine-similarity": "^1.0.1"
-  }
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  },
+  "keywords": ["mcp", "ai", "rag", "second-brain", "bun", "cli"],
+  "author": "Your Name",
+  "license": "MIT"
 }
