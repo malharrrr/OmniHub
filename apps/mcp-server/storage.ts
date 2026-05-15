@@ -1,6 +1,8 @@
-import {existsSync, readFileSync, writeFileSync, renameSync, mkdirSync} from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, renameSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { CONFIG } from '../config.js';
+import { getEncryptionKey } from '../config.js'; 
 
 export interface Memory {
   id: string;
@@ -8,6 +10,39 @@ export interface Memory {
   content: string;
   embedding: number[];
   createdAt: string;
+}
+
+const ALGORITHM = 'aes-256-gcm';
+
+function encryptData(text: string): string {
+  const key = Buffer.from(getEncryptionKey(), 'hex'); 
+  const iv = randomBytes(16);
+  const cipher = createCipheriv(ALGORITHM, key, iv);
+  
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag().toString('hex');
+  
+  // Store iv and authTag alongside the encrypted payload
+  return JSON.stringify({ iv: iv.toString('hex'), authTag, data: encrypted });
+}
+
+function decryptData(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed.iv && parsed.authTag && parsed.data) {
+      const key = Buffer.from(getEncryptionKey(), 'hex');
+      const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(parsed.iv, 'hex'));
+      decipher.setAuthTag(Buffer.from(parsed.authTag, 'hex'));
+      
+      let decrypted = decipher.update(parsed.data, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      return decrypted;
+    }
+    return raw;
+  } catch {
+    throw new Error('Failed to decrypt data.');
+  }
 }
 
 function ensureDataFile(): void {
@@ -20,10 +55,14 @@ function ensureDataFile(): void {
   }
 }
 
-//write then rename memories.json (backup)
 function atomicWrite(memories: Memory[]): void {
   const tmp = CONFIG.dataFile + '.tmp';
-  writeFileSync(tmp, JSON.stringify(memories, null, 2), 'utf-8');
+  const rawJson = JSON.stringify(memories, null, 2);
+  
+  // encrypt the JSON string before writing to disk
+  const securePayload = encryptData(rawJson);
+  
+  writeFileSync(tmp, securePayload, 'utf-8');
   renameSync(tmp, CONFIG.dataFile);
 }
 
@@ -31,9 +70,10 @@ export function loadMemories(): Memory[] {
   ensureDataFile();
   try {
     const raw = readFileSync(CONFIG.dataFile, 'utf-8');
-    return JSON.parse(raw) as Memory[];
-  } catch {
-    console.error('⚠️  memories.json is corrupted. Starting fresh.');
+    const decryptedJson = decryptData(raw);
+    return JSON.parse(decryptedJson) as Memory[];
+  } catch (error) {
+    console.error('⚠️  memories.json is corrupted or decryption failed. Starting fresh.');
     atomicWrite([]);
     return [];
   }

@@ -1,6 +1,7 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 
 const CONFIG_DIR = join(homedir(), '.omnihub');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
@@ -23,6 +24,7 @@ interface StoredConfig {
   GEMINI_API_KEY?: string;
   OPENAI_API_KEY?: string;
   provider?: Provider;
+  ENCRYPTION_KEY?: string;
 }
 
 function readStoredConfig(): StoredConfig {
@@ -34,6 +36,32 @@ function readStoredConfig(): StoredConfig {
     }
   }
   return {};
+}
+
+export function getEncryptionKey(): string {
+  const stored = readStoredConfig();
+  
+  // if a key already exists, return it
+  if (stored.ENCRYPTION_KEY) {
+    return stored.ENCRYPTION_KEY;
+  }
+
+  // otherwise, generate a secure 256-bit hex key
+  const newKey = randomBytes(32).toString('hex');
+  
+  if (!existsSync(CONFIG_DIR)) {
+    mkdirSync(CONFIG_DIR, { recursive: true });
+  }
+
+  const updated: StoredConfig = {
+    ...stored,
+    ENCRYPTION_KEY: newKey,
+  };
+  writeFileSync(CONFIG_FILE, JSON.stringify(updated, null, 2), {
+    mode: 0o600,
+  });
+
+  return newKey;
 }
 
 export function getProvider(): Provider {

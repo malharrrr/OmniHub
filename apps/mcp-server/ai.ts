@@ -3,7 +3,6 @@ import { CONFIG, getApiKey, getProvider } from '../config.js';
 import { getEmbeddingProvider } from './embedding.js';
 import {loadMemories, addMemoryRecord, updateMemoryRecord, type Memory} from './storage.js';
 
-
 export function validateContent(content: string): void {
   if (!content || content.trim().length === 0) {
     throw new Error('Content cannot be empty.');
@@ -23,7 +22,7 @@ export function validateCategory(category: string): void {
   }
 }
 
-//auto catdegorizd function
+//auto categorize function
 export async function autoCategorize(content: string): Promise<string> {
   const provider = getProvider();
 
@@ -151,9 +150,26 @@ export async function editMemory(
   return `Memory ${id} updated successfully.`;
 }
 
+function calculateKeywordScore(query: string, content: string): number {
+  // extract words longer than 2 chars to avoid generic stop words (it, is, a, to)
+  const queryTerms = query.toLowerCase().match(/\b\w{3,}\b/g) || [];
+  if (queryTerms.length === 0) return 0;
+
+  const contentLower = content.toLowerCase();
+  let hits = 0;
+
+  for (const term of queryTerms) {
+    if (contentLower.includes(term)) {
+      hits++;
+    }
+  }
+  return hits / queryTerms.length; 
+}
 // omnihub search
 export interface SearchResult extends Omit<Memory, 'embedding'> {
   similarity: number;
+  keywordScore: number;
+  combinedScore: number;
 }
 
 export async function searchMemories(
@@ -179,17 +195,29 @@ export async function searchMemories(
 
   const memories = loadMemories();
 
+  const VECTOR_WEIGHT = 0.7;
+  const KEYWORD_WEIGHT = 0.3;
+
   const results = memories
     .filter((m) => (category ? m.category === category : true))
-    .map((m) => ({
-      id: m.id,
-      category: m.category,
-      content: m.content,
-      createdAt: m.createdAt,
-      similarity: cosineSimilarity(queryVector, m.embedding) as number,
-    }))
-    .filter((m) => m.similarity >= minScore)
-    .sort((a, b) => b.similarity - a.similarity)
+    .map((m) => {
+      const vectorScore = cosineSimilarity(queryVector, m.embedding) as number;
+      const kwScore = calculateKeywordScore(query, m.content);
+      
+      const combinedScore = (vectorScore * VECTOR_WEIGHT) + (kwScore * KEYWORD_WEIGHT);
+
+      return {
+        id: m.id,
+        category: m.category,
+        content: m.content,
+        createdAt: m.createdAt,
+        similarity: vectorScore,
+        keywordScore: kwScore,
+        combinedScore: combinedScore,
+      };
+    })
+    .filter((m) => m.combinedScore >= minScore)
+    .sort((a, b) => b.combinedScore - a.combinedScore)
     .slice(0, limit);
 
   return results;

@@ -28,16 +28,16 @@ Everything lives in `~/.omnihub/memories.json`, searched in-memory using cosine 
 
 ## Features
 
-- **Fast CLI** — log a memory or search your history in one command from any directory
-- **Editor mode** — omit the content argument and OmniHub opens your `$EDITOR` for longer notes
-- **Auto-categorization** — skip the `-c` flag and let the AI pick the right category for you
-- **Multi-provider support** — use Gemini (default) or OpenAI for both embeddings and categorization
-- **Semantic search** — finds relevant entries by meaning, not just keywords; filter by category or score
-- **6 MCP tools** — log, search, list, edit, delete, and export memories directly from your AI client
-- **Markdown export** — dump your entire memory bank as a structured `.md` file grouped by category
-- **Persistent config** — API keys and provider preference stored securely in `~/.omnihub/config.json`
-- **Atomic writes** — memories written via temp-file-then-rename to prevent corruption
-- **Privacy-first** — all data stays local; `memories.json` is gitignored by default
+- **Hybrid Search** — Combines semantic vector similarity (70%) with exact keyword matching (30%) to find both concepts and specific technical IDs.
+- **At-Rest Encryption** — All memories are encrypted using AES-256-GCM before being written to disk, ensuring your second brain remains private even if files are accessed.
+- **Fast CLI** — Log a memory or search your history in one command from any directory.
+- **Editor mode** — Omit the content argument and OmniHub opens your `$EDITOR` for longer notes.
+- **Auto-categorization** — Skip the `-c` flag and let the AI pick the right category for you.
+- **Multi-provider support** — Use Gemini (default) or OpenAI for both embeddings and categorization.
+- **6 MCP tools** — Log, search, list, edit, delete, and export memories directly from your AI client.
+- **Markdown export** — Dump your entire memory bank as a structured `.md` file grouped by category.
+- **Persistent config** — API keys and encryption keys stored securely in `~/.omnihub/config.json` with `0600` permissions.
+- **Atomic writes** — Memories written via temp-file-then-rename to prevent data corruption.
 ---
 
 ## Prerequisites
@@ -250,28 +250,22 @@ categories: ["product_idea", "user_feedback", "marketing", "investor"]
 
 ## How It Works
 
-1. **Login** — `omnihub login` saves your API key to `~/.omnihub/config.json` with restricted file permissions (`0600`).
-
-2. **Log** — You run `omnihub log`. If no `-c` flag is given, the note is sent to Gemini/OpenAI for categorization. The content is embedded into a vector and stored alongside metadata in `~/.omnihub/memories.json` via an atomic write (write to `.tmp`, then rename).
-
-3. **Search** — Your query is embedded the same way, then compared against all stored vectors using cosine similarity. Results are ranked by score and optionally filtered by category or minimum similarity threshold.
-
-4. **MCP** — When an AI client is connected, it can call any of the six tools in response to your questions. You don't manage retrieval — the AI does.
-
-5. **Export** — `export_memories` dumps your full history as a Markdown document, grouped by category with timestamps and IDs.
-
----
+1. **Login & Keys** — `omnihub login` saves your API key and generates a unique 256-bit encryption key in `~/.omnihub/config.json`.
+2. **Log** — When you log a note, OmniHub generates a vector embedding. The entire memory object is then encrypted using your local key and saved to `memories.json` via an atomic write.
+3. **Hybrid Search** — Your query is embedded and compared against stored vectors. This is combined with a keyword-frequency score to ensure specific terms (like "Bug-123") aren't lost in semantic translation.
+4. **MCP** — Connected AI clients (like Claude Code) can call tools to query your history. OmniHub handles the decryption and ranking in-memory to provide the most relevant context.
+5. **Export** — `export_memories` decrypts your history and formats it into a structured Markdown document.
 
 ## Data & Privacy
 
-| What | Where |
-|---|---|
-| Memories | `~/.omnihub/memories.json` |
-| Config & API keys | `~/.omnihub/config.json` (mode `0600`) |
-| Gitignore | `memories.json` is excluded by default |
-| External calls | Only to Gemini or OpenAI for embedding/categorization |
+| What | Where | Security |
+|---|---|---|
+| Memories | `~/.omnihub/memories.json` | **Encrypted (AES-256-GCM)** |
+| Config & Keys | `~/.omnihub/config.json` | **Restricted (mode 0600)** |
+| Gitignore | `memories.json` | **Excluded by default** |
+| External calls | Gemini / OpenAI APIs | **Embeddings & Categorization only** |
 
-Your data never leaves your machine except for the text sent to your chosen provider's API. No telemetry, no cloud storage.
+Your data never leaves your machine in plain text except for the text sent to your chosen provider's API. No telemetry, no cloud storage.
 
 > **Never commit your `~/.omnihub/` directory or any `.env` files to a public repository.**
 
