@@ -7,7 +7,6 @@
 <p align="center">
   <strong>A zero-infrastructure MCP server and CLI for your AI second brain.</strong>
 </p>
-**A zero-infrastructure MCP server and CLI for your AI second brain.**
 
 OmniHub is a lightweight, local memory system that gives your AI assistants (Claude, Gemini, etc.) access to your personal knowledge history — decisions, ideas, milestones, notes — through semantic search over the Model Context Protocol (MCP). No database to provision, no container to run. Just a JSON file and a fast CLI.
 
