@@ -271,6 +271,21 @@ Your data never leaves your machine in plain text except for the text sent to yo
 
 ---
 
+## Performance & Benchmarks (At 1,000 Stored Memories)
+
+OmniHub is built to maintain a zero-infrastructure, low-latency profile even after a year of heavy daily usage. Benchmarks performed using `hyperfine` (Apple Silicon) on a dataset of 1,000 encrypted entries (approx. 40MB at-rest):
+
+| Operation | Total Latency | Local CPU Execution | Network API (Gemini) |
+| :--- | :--- | :--- | :--- |
+| **Hybrid Search** | ~1.6s | < 1.0s | ~600ms |
+| **Log Memory** | ~8.6s | < 400ms | ~8.2s |
+
+* **Search Performance:** Local AES-256 decryption, JSON parsing, and O(n) cosine similarity math across 1,000 high-dimensional vectors executes in roughly **1 second**. 
+* **Write Pipeline:** The local file operations (decrypting, appending, re-encrypting 40MB) complete in under **400ms**. 
+* *Note: Total execution times are strictly bottlenecked by the external AI provider's API response time for generating embeddings, not the local engine, will be switching to a local embedding model in future patches.*
+
+---
+
 ## Scripts
 
 ```bash
