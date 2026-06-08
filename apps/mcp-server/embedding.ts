@@ -1,4 +1,4 @@
-import { env, pipeline } from '@huggingface/transformers';
+import { pipeline, env } from '@xenova/transformers';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
