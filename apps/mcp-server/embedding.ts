@@ -17,7 +17,7 @@ class LocalProvider implements EmbeddingProvider {
     if (!this.extractorInstance) {
       this.extractorInstance = await pipeline(
         'feature-extraction',
-        'onnx-community/all-MiniLM-L6-v2-ONNX',
+        'Xenova/all-MiniLM-L6-v2',
         { quantized: true }
       );
     }
