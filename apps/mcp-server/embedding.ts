@@ -1,4 +1,4 @@
-import { pipeline, env } from '@xenova/transformers';
+import { env, pipeline } from '@xenova/transformers';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -18,7 +18,7 @@ class LocalProvider implements EmbeddingProvider {
       this.extractorInstance = await pipeline(
         'feature-extraction',
         'onnx-community/all-MiniLM-L6-v2-ONNX',
-        { dtype: 'q4' }
+        { quantized: true }
       );
     }
     return this.extractorInstance;
